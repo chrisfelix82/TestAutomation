@@ -1,0 +1,14 @@
+{
+	"env": "mobile",
+	
+	"mobile": {
+		"scriptTimeoutSec": "120", 
+		"DOHRunnerUrl" : "http://9.26.191.205/dojo/util/doh/DOHRunner.html?packageNames=example|commonapp&packageLocations=//9.26.191.205/dojo/util/doh/example|//9.26.191.205/dojo/commonapp",
+		"hubUrl": "http://i4i27.torolab.ibm.com:4444/wd/hub",
+		"DOHModule" : "example/module",
+		"environmentName" : "mobile"
+	},
+	
+	
+	"capabilities": [{"browser": "firefox"}]
+}

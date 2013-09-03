@@ -1,0 +1,176 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>DOHRunner</title>
+
+<script type="text/javascript">
+//getParameterByName from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values
+function getParameterByName(name)
+{
+  name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+  var regexS = "[\\?&]" + name + "=([^&#]*)";
+  var regex = new RegExp(regexS);
+  var results = regex.exec(window.location.search);
+  if(results == null)
+    return "";
+  else
+    return decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+if(getParameterByName("packageNames") != "" && getParameterByName("packageLocations") != ""){
+
+var packageNames = getParameterByName("packageNames").split("|");
+var packageLocations = getParameterByName("packageLocations").split("|");
+var packages = new Array();
+
+for(var x = 0; x < packageNames.length;x++){
+	packages.push({"name" : packageNames[x], "location" : packageLocations[x]});
+}//end for
+packages.push({'name' : 'doh', 'location' : '/dojo/util/doh'});
+dojoConfig = {
+	parseOnLoad: true,
+	packages : packages
+};
+}else{
+dojoConfig = {
+	parseOnLoad: true,
+	packages : [{'name' : 'doh', 'location' : '/dojo/util/doh'}]
+};
+}//end if
+
+</script>
+<script src="/dojo/dojo/dojo.js"></script>
+<script type="text/javascript">
+require(["dojo/aspect","doh/runner","dojo/domReady!"],function(aspect,doh){
+    		aspect.before(doh,"_testRegistered",_testRegistered);
+	 		aspect.before(doh,"_testFinished",_testFinished);
+	 		aspect.before(doh,"_testStarted",_testStarted);
+	 		aspect.before(doh,"t",_assertTrue);
+	 		aspect.before(doh,"assertTrue",_assertTrue);
+	 		aspect.before(doh,"f",_assertFalse);
+	 		aspect.before(doh,"assertFalse",_assertFalse);
+	 		aspect.before(doh,"e",_assertError);
+	 		aspect.before(doh,"assertError",_assertError);
+	 		aspect.before(doh,"is",_assertEqual);
+	 		aspect.before(doh,"assertEqual",_assertEqual);
+	 		aspect.before(doh,"isNot",_assertNotEqual);
+	 		aspect.before(doh,"assertNotEqual",_assertNotEqual);
+});
+
+var environmentName;
+var browser;
+var tests = new Object();
+tests.keys = new Array();
+var currentTestHint = null;
+var logs = new Array();
+var currentTestKey = null;
+
+function _assertNotEqual(/*Object*/ notExpected, /*Object*/ actual, /*String?*/ hint){
+	currentTestHint = hint;
+}
+
+function _assertEqual(/*Object*/ expected, /*Object*/ actual, /*String?*/ hint, doNotThrow){
+	currentTestHint = hint;
+}
+
+function _assertTrue(condition,hint){
+	currentTestHint = hint;
+}
+
+function _assertFalse(c,hint){
+	currentTestHint = hint;
+}
+
+function _assertError(e, s, f, a,hint){
+	currentTestHint = hint;
+}
+
+
+//Callback for DOH test registration
+function _testRegistered(group,fixture){
+    log("_testRegistered: " + group + ":" + fixture.name);
+    var key = getTestKey(group,fixture);
+    tests[key] = null;
+    tests.keys.push(key);
+}
+
+function getTestKey(group,fixture){
+	return group + ":" + fixture.name + "[" + environmentName + "," + browser + "]";
+}
+
+function _testStarted(group, fixture){
+	currentTestKey = getTestKey(group,fixture);
+}
+
+//Callback for test finishing
+function _testFinished(group, fixture, success){
+    try{
+    var hint = currentTestHint;
+	require(["dojo/json"],function(json){
+	    try{
+	    var result = new Object();
+	    result.success = success;
+	    if(hint){
+	    	result.hint = hint;
+	    }//end if
+	    tests[getTestKey(group,fixture)] = json.stringify(result);
+		}catch(e){log("Error in _testFinished: " + e);}
+	});
+	currentTestHint = null;
+	}catch(e){
+		log("Error in _testFinished: " + e);
+	}//end try
+}
+
+function registerModule(moduleName,eName,b,callback){
+    environmentName = eName;
+    browser = b;
+    try{
+	require([moduleName,"dojo/json","dojo/domReady!"],function(Module,json){
+	    try{
+	    	log("Registering module: " + moduleName);
+			var module = new Module();//This registers all tests
+			log("done registering tests");
+			callback(json.stringify(tests.keys));
+		}catch(e){log("Error in registerModule: " + e);callback("Error in registerModule: " + e);}
+	});
+	}catch(e){log("Error in registerModule: " + e);callback("Error in registerModule: " + e);}
+}
+
+function runTests(){
+    try{
+    //log("starting doh run...")
+	doh.run();
+	}catch(e){log("Error in runTests: " + e);}
+}
+
+function getTestResult(testKey,callback){
+    try{
+	if(tests[testKey] != null){
+	    //log("returning test result to JUnit: " + testResults[index]);
+		callback(tests[testKey]);
+	}else{
+	    //log("waiting on test result to be ready for index: " + index);
+		setTimeout(function(){getTestResult(testKey,callback);},2000);
+	}//end if
+	}catch(e){log("Error in getTestResult: " + e);callback("Error in getTestResult: " + e);}
+}
+
+function log(msg){
+	document.getElementById("runStatusDiv").innerHTML = document.getElementById("runStatusDiv").innerHTML + msg + "<br/><br/>";
+	if(!logs[currentTestKey]){
+		logs[currentTestKey] = new Array();
+	}//end if
+	logs[currentTestKey].push(msg);
+}
+
+function getLogs(testKey){
+    //document.getElementById("runStatusDiv").innerHTML = document.getElementById("runStatusDiv").innerHTML + "getting logs: " + logs[testIndex][0] + "<br/><br/>";
+	return logs[testKey];
+}
+</script>
+</head>
+<body>
+<div id="runStatusDiv"></div>
+</body>
+</html>
