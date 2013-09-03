@@ -1,0 +1,15 @@
+{
+	"env": "local",
+	
+	"local" : {
+		"hubUrl": "http://localhost:4723/wd/hub",
+		"environmentName": "iOSSimulator",
+		"username" : "username",
+		"password" : "password",
+		"app": "/Users/chris/Documents/dev/icap/workspace/MobileProject/apps/main/ipad/native/build/Release-iphonesimulator/main.app"
+	},
+	
+	"capabilities": [{"browser": "iOS",
+					  "browserVersion" : "6.1"
+					  }]
+}
