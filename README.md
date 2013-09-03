@@ -9,7 +9,7 @@ If you are using Rational Quality Manager (RQM) for test management, you may als
 The framework also provides this.  To set this up do the following:
 
 1. Create a JUnit 4 Selenium based test in RQM, and point it to com.org.testautomation.util.DOHRunner
-2. On an HTTP server of your choosing, add a source distribution of Dojo (see DOHConfig.json) for an example.  
-3. On the HTTP server, also add the resources directory contents to the doh package
+2. On an HTTP server of your choosing, add a source distribution of Dojo (including the doh package)
+3. On the HTTP server, also add the "resources" directory contents to the doh package on the HTTP server.
 4. Register your custom app packages in the DOHRunnerUrl that you see in the DOHConfig.json file.
 5. Run the RQM test case, and the results will be available in RQM!
